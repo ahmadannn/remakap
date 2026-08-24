@@ -1,0 +1,6 @@
+{
+  "name": "Order Report Generator",
+  "description": "Generator laporan monitoring order otomatis berdasarkan STO dan waktu kerja dari hasil olah data Excel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
