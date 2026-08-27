@@ -39,6 +39,11 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // Fetch STO Mapping on mount
+  useEffect(() => {
+    import('./config/stoMapping').then(m => m.fetchStoMapping());
+  }, []);
+
   // Mode laporan aktif berdasarkan slot yang dipilih
   const currentModeInfo = detectReportMode(currentTime, selectedSlot);
 
@@ -194,7 +199,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] text-[#1E293B] flex flex-col font-sans antialiased">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased">
       {/* 1. Header Aplikasi */}
       <Header onOpenStoModal={() => setIsStoModalOpen(true)} />
 
@@ -240,7 +245,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsStoModalOpen(true)}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-900 hover:text-slate-600 cursor-pointer"
                 >
                   <HelpCircle className="w-3.5 h-3.5" />
                   Daftar STO
@@ -274,20 +279,20 @@ export default function App() {
           <div className="lg:col-span-7 flex flex-col gap-5">
             {processedResult ? (
               <>
-                {/* 4 Kartu Metrik Ringkasan */}
-                <Summary
-                  totalOrders={processedResult.totalOrders}
-                  groupedByRegion={processedResult.groupedByRegion}
-                  unmappedStos={processedResult.unmappedStos}
-                  unmappedOrdersCount={processedResult.unmappedOrdersCount}
-                />
-
                 {/* Dark Terminal Preview & Tombol Salin */}
                 <ReportPreview
                   reportText={processedResult.generatedReportText}
                   splitReports={processedResult.splitReports}
                   totalOrders={processedResult.totalOrders}
                   onUpdateReportText={handleUpdateReportText}
+                />
+
+                {/* 4 Kartu Metrik Ringkasan */}
+                <Summary
+                  totalOrders={processedResult.totalOrders}
+                  groupedByRegion={processedResult.groupedByRegion}
+                  unmappedStos={processedResult.unmappedStos}
+                  unmappedOrdersCount={processedResult.unmappedOrdersCount}
                 />
               </>
             ) : (
@@ -308,16 +313,11 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleLoadSampleFromEmptyState}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-200 transition active:scale-95 cursor-pointer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-cyan-500 hover:bg-cyan-600 text-white shadow-md shadow-cyan-200 transition active:scale-95 cursor-pointer"
                 >
                   <span>Coba dengan Data Contoh (PSB, DO, MO)</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
-
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-2">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Pemrosesan data 100% lokal di browser</span>
-                </div>
               </div>
             )}
           </div>
@@ -330,8 +330,6 @@ export default function App() {
           Order Report Generator • Sistem Otomatisasi Monitoring
         </div>
         <div className="flex items-center gap-3 font-mono text-[10px]">
-          <span>CONFIG: stoMapping.ts & orderTypes.ts</span>
-          <span>•</span>
           <span className="text-emerald-600 font-bold">CLIENT-SIDE PRIVACY SECURE</span>
         </div>
       </footer>
@@ -339,7 +337,11 @@ export default function App() {
       {/* Modal Daftar Mapping STO */}
       <StoMappingModal
         isOpen={isStoModalOpen}
-        onClose={() => setIsStoModalOpen(false)}
+        onClose={() => {
+          setIsStoModalOpen(false);
+          // Otomatis proses ulang data untuk membaca STO yang baru ditambahkan
+          handleProcessData();
+        }}
       />
     </div>
   );

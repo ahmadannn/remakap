@@ -54,10 +54,10 @@ export function parseExcelOutput(
     if (!cleanLine) continue;
 
     // 2. Cek apakah baris ini adalah penanda jenis order (misal "(ORDER PSB)", "(ORDER DO)", "(ORDER MO)")
+    // Sesuai permintaan: abaikan saja baris judul ini jika ke-copy, JANGAN otomatis ganti jenis order
     const matchedType = matchOrderTypeHeader(cleanLine);
     if (matchedType) {
-      currentOrderType = matchedType;
-      continue; // Lewati baris judul section jenis order
+      continue; // Lewati baris judul section agar tidak diparsing sebagai data STO
     }
 
     // Abaikan header tabel jika pengguna menyalin termasuk baris judul kolom Excel
@@ -203,35 +203,9 @@ export function parseExcelOutput(
     const formattedCleanLine = columns.join(' - ');
 
     // Tentukan assignedOrderType untuk baris ini
+    // Sesuai permintaan: pastikan jenis order mutlak 100% mengikuti kotak teks asal data (currentOrderType)
+    // Tidak ada lagi logika pindah-pindah otomatis.
     let rowOrderType = currentOrderType;
-    // Jika ada lebih dari satu jenis order dipilih dan baris belum berada di bawah section spesifik,
-    // cek apakah baris ini memuat kata kunci jenis order lain yang dipilih
-    if (sortedTypes.length > 1) {
-      for (const t of sortedTypes) {
-        if (t === 'ORDER DO' && /\b(DO|DISMANTLE)\b/i.test(cleanLine)) {
-          rowOrderType = 'ORDER DO';
-          break;
-        } else if (t === 'ORDER MO' && /\b(MO|MODIFY|MODIFIKASI)\b/i.test(cleanLine)) {
-          rowOrderType = 'ORDER MO';
-          break;
-        } else if (t === 'ORDER IHLD ON GOING' && /\b(IHLD|HOLD)\b/i.test(cleanLine)) {
-          rowOrderType = 'ORDER IHLD ON GOING';
-          break;
-        } else if (t === 'Pengajuan JT PWT & Magelang' && /\b(JT|OGP PEMBANGUNAN|BUTUH JT)\b/i.test(cleanLine)) {
-          rowOrderType = 'Pengajuan JT PWT & Magelang';
-          break;
-        } else if (t === 'ORDER DIGITAL' && /\b(DIGITAL|NETMONK|OCA|Pijar)\b/i.test(cleanLine)) {
-          rowOrderType = 'ORDER DIGITAL';
-          break;
-        } else if (t === 'ORDER OBL' && /\b(OBL)\b/i.test(cleanLine)) {
-          rowOrderType = 'ORDER OBL';
-          break;
-        } else if (t === 'ORDER WMS DENGAN AP BARU' && /\b(AP BARU|WMS.*AP)\b/i.test(cleanLine)) {
-          rowOrderType = 'ORDER WMS DENGAN AP BARU';
-          break;
-        }
-      }
-    }
 
     parsedRows.push({
       id: `row-${rowCounter++}-${Date.now()}`,

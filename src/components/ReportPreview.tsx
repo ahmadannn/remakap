@@ -113,12 +113,12 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({
           >
             {isEditing ? (
               <>
-                <Eye className="w-3.5 h-3.5 text-indigo-400" />
+                <Eye className="w-3.5 h-3.5 text-cyan-400" />
                 Mode Preview
               </>
             ) : (
               <>
-                <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
+                <Edit3 className="w-3.5 h-3.5 text-cyan-400" />
                 Edit Teks
               </>
             )}
@@ -126,96 +126,6 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({
         </div>
       </div>
 
-      {/* 2. Quick Direct Copy Cards for Purwokerto & Magelang */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-sans">
-        {/* Box Purwokerto Quick Action */}
-        <div
-          className={`p-3 rounded-xl border transition-all ${
-            activeTab === 'purwokerto'
-              ? 'bg-blue-950/40 border-blue-600/60 ring-1 ring-blue-500/30'
-              : 'bg-slate-800/60 border-slate-700/80 hover:bg-slate-800'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-blue-400" />
-              <span className="text-xs font-bold text-slate-100">Witel PURWOKERTO</span>
-            </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-900/80 text-blue-200 border border-blue-700 font-bold">
-              {splitReports?.countPurwokerto || 0} Order
-            </span>
-          </div>
-
-          <button
-            type="button"
-            disabled={!hasPwt}
-            onClick={() => handleCopySpecific(tabTexts.purwokerto, 'PURWOKERTO')}
-            className={`w-full py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-              hasPwt
-                ? copiedTarget === 'PURWOKERTO'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-sm'
-                : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-            }`}
-          >
-            {copiedTarget === 'PURWOKERTO' ? (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                <span>Tersalin!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5" />
-                <span>Salin Laporan Purwokerto</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Box Magelang Quick Action */}
-        <div
-          className={`p-3 rounded-xl border transition-all ${
-            activeTab === 'magelang'
-              ? 'bg-purple-950/40 border-purple-600/60 ring-1 ring-purple-500/30'
-              : 'bg-slate-800/60 border-slate-700/80 hover:bg-slate-800'
-          }`}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-purple-400" />
-              <span className="text-xs font-bold text-slate-100">Witel MAGELANG</span>
-            </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-900/80 text-purple-200 border border-purple-700 font-bold">
-              {splitReports?.countMagelang || 0} Order
-            </span>
-          </div>
-
-          <button
-            type="button"
-            disabled={!hasMag}
-            onClick={() => handleCopySpecific(tabTexts.magelang, 'MAGELANG')}
-            className={`w-full py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
-              hasMag
-                ? copiedTarget === 'MAGELANG'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'bg-purple-600 hover:bg-purple-500 text-white shadow-sm'
-                : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
-            }`}
-          >
-            {copiedTarget === 'MAGELANG' ? (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                <span>Tersalin!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5" />
-                <span>Salin Laporan Magelang</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
 
       {/* Copy Notification Toast */}
       {copiedTarget && (
@@ -239,8 +149,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({
           onClick={() => setActiveTab('purwokerto')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap cursor-pointer ${
             activeTab === 'purwokerto'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800'
           }`}
         >
           <Building2 className="w-3.5 h-3.5" />
@@ -255,8 +165,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({
           onClick={() => setActiveTab('magelang')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap cursor-pointer ${
             activeTab === 'magelang'
-              ? 'bg-purple-600 text-white shadow-sm'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-400 hover:text-white hover:bg-slate-800'
           }`}
         >
           <Building2 className="w-3.5 h-3.5" />
@@ -272,8 +182,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({
             onClick={() => setActiveTab('areaLain')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap cursor-pointer ${
               activeTab === 'areaLain'
-                ? 'bg-amber-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-850'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
             }`}
           >
             <MapPin className="w-3.5 h-3.5" />
@@ -293,7 +203,7 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({
             value={currentText}
             onChange={handleTextChange}
             rows={12}
-            className="w-full font-mono text-xs sm:text-sm p-4 rounded-xl border border-indigo-500/80 bg-slate-950 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 leading-relaxed"
+            className="w-full font-mono text-xs sm:text-sm p-4 rounded-xl border border-cyan-500/80 bg-slate-950 text-slate-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 leading-relaxed"
           />
         ) : (
           <div className="p-4 rounded-xl border border-slate-800 bg-slate-950/90 font-mono text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed max-h-[380px] overflow-y-auto select-text shadow-inner">
@@ -317,8 +227,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({
           className={`py-3.5 px-4 rounded-xl font-bold text-sm shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer ${
             currentText.trim()
               ? copiedTarget === (activeTab === 'purwokerto' ? 'PURWOKERTO' : activeTab === 'magelang' ? 'MAGELANG' : 'AREA LAIN')
-                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/40'
-                : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-950/40'
+                ? 'bg-white text-slate-900 shadow-sm'
+                : 'bg-slate-100 hover:bg-white text-slate-900 shadow-sm'
               : 'bg-slate-800 text-slate-500 cursor-not-allowed'
           }`}
         >

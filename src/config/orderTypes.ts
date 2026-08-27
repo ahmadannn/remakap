@@ -59,6 +59,11 @@ export function sortSelectedOrderTypes(selected: string[]): string[] {
 export function matchOrderTypeHeader(line: string): string | null {
   const clean = line.trim().replace(/^[\(\[\{=\-\*\#\s]+|[\)\]\}=\-\*\#\s]+$/g, '').trim().toUpperCase();
 
+  // Header tidak mungkin sepanjang baris data order
+  if (clean.length > 50) {
+    return null;
+  }
+
   for (const orderType of ORDER_TYPES_LIST) {
     const target = orderType.toUpperCase();
     if (clean === target) {
@@ -66,32 +71,32 @@ export function matchOrderTypeHeader(line: string): string | null {
     }
   }
 
-  // Cek jika baris diawali kata kunci spesifik
-  if (clean.includes('PENGAJUAN JT') || clean.includes('JT PWT')) {
+  // Pencocokan ketat untuk kata kunci spesifik
+  if (clean === 'PENGAJUAN JT' || clean === 'JT PWT') {
     return 'Pengajuan JT PWT & Magelang';
   }
-  if (clean.includes('IHLD')) {
+  if (clean === 'IHLD' || clean === 'ORDER IHLD' || clean === 'IHLD ON GOING') {
     return 'ORDER IHLD ON GOING';
   }
-  if (clean.includes('WMS') && (clean.includes('AP BARU') || clean.includes('AP'))) {
+  if (clean === 'WMS AP BARU' || clean === 'ORDER WMS AP BARU' || clean === 'WMS DENGAN AP BARU') {
     return 'ORDER WMS DENGAN AP BARU';
   }
-  if (clean.includes('AREA LAIN') || clean.includes('AM INTERNAL')) {
+  if (clean === 'AREA LAIN' || clean === 'AM INTERNAL') {
     return 'ORDER AREA LAIN (MILIK AM INTERNAL)';
   }
-  if (clean === 'PSB' || clean.startsWith('ORDER PSB')) {
+  if (clean === 'PSB' || clean === 'ORDER PSB') {
     return 'ORDER PSB';
   }
-  if (clean === 'DO' || clean.startsWith('ORDER DO')) {
+  if (clean === 'DO' || clean === 'ORDER DO') {
     return 'ORDER DO';
   }
-  if (clean === 'MO' || clean.startsWith('ORDER MO')) {
+  if (clean === 'MO' || clean === 'ORDER MO') {
     return 'ORDER MO';
   }
-  if (clean === 'DIGITAL' || clean.startsWith('ORDER DIGITAL')) {
+  if (clean === 'DIGITAL' || clean === 'ORDER DIGITAL') {
     return 'ORDER DIGITAL';
   }
-  if (clean === 'OBL' || clean.startsWith('ORDER OBL')) {
+  if (clean === 'OBL' || clean === 'ORDER OBL') {
     return 'ORDER OBL';
   }
 

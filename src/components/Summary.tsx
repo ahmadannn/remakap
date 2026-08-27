@@ -30,11 +30,11 @@ export const Summary: React.FC<SummaryProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* Total Badge */}
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200/80 text-indigo-900 font-bold text-xs">
-            <BarChart3 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-50 border border-cyan-200/80 text-cyan-900 font-bold text-xs">
+            <BarChart3 className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
             <span>Total:</span>
-            <span className="text-sm font-black text-indigo-700">{totalOrders}</span>
-            <span className="text-[10px] text-indigo-600/80 font-normal">Order</span>
+            <span className="text-sm font-black text-cyan-700">{totalOrders}</span>
+            <span className="text-[10px] text-cyan-600/80 font-normal">Order</span>
           </div>
 
           {/* Inline Compact Pills */}
@@ -50,7 +50,7 @@ export const Summary: React.FC<SummaryProps> = ({
                   title={`STO: ${regionData.stoCodes.join(', ')}`}
                 >
                   <span className="font-semibold text-slate-800">{region}:</span>
-                  <span className="font-bold text-indigo-600">{regionData.count}</span>
+                  <span className="font-bold text-cyan-600">{regionData.count}</span>
                   <span className="text-[10px] text-slate-400 font-mono">({percent}%)</span>
                 </div>
               );
@@ -75,7 +75,7 @@ export const Summary: React.FC<SummaryProps> = ({
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-800 px-2 py-1 rounded hover:bg-slate-100 transition cursor-pointer font-medium"
+          className="inline-flex items-center gap-1 text-[11px] text-slate-900 hover:bg-slate-100 px-2 py-1 rounded transition cursor-pointer font-bold"
         >
           <span>{isExpanded ? 'Sembunyikan STO' : 'Detail STO'}</span>
           {isExpanded ? (
@@ -98,7 +98,7 @@ export const Summary: React.FC<SummaryProps> = ({
               >
                 <div className="flex items-center justify-between text-slate-600 font-bold text-[11px]">
                   <span className="truncate">{region}</span>
-                  <span className="text-indigo-600 font-black">{regionData.count}</span>
+                  <span className="text-cyan-600 font-black">{regionData.count}</span>
                 </div>
                 <div className="text-[10px] text-slate-400 font-mono truncate">
                   STO: {regionData.stoCodes.join(', ')}

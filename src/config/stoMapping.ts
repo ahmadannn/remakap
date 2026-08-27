@@ -1,93 +1,112 @@
+
+export let STO_MAPPING: Record<string, string> = {};
+export let FULL_STO_DATA: Array<{ code: string; region: string; witel: string }> = [];
+
 /**
- * ============================================================================
- * KONFIGURASI MAPPING STO (SENTRAL TELEPON OTOMATIS) / WILAYAH
- * ============================================================================
- * 
- * PANDUAN PENGGUNAAN UNTUK PENGGUNA / INTERN:
- * 1. File ini adalah tempat pendaftaran kode STO ke nama Wilayah / Daerah.
- * 2. Format: "KODE_STO": "NAMA_WILAYAH" (Gunakan huruf KAPITAL untuk kode STO).
- * 3. Anda bebas menambah, mengubah, atau menghapus mapping di bawah ini.
- * 4. Aplikasi akan otomatis mendeteksi dan menggunakan mapping terbaru dari file ini.
- * 5. Jika sebuah STO belum terdaftar di sini, aplikasi TIDAK akan menebaknya
- *    dan akan menampilkannya sebagai "STO BELUM TERDAFTAR" pada halaman web.
+ * Fetch data STO dari backend XAMPP (Express)
  */
+export async function fetchStoMapping(): Promise<void> {
+  try {
+    const res = await fetch('http://localhost:5000/api/stos');
+    if (!res.ok) throw new Error('Gagal mengambil data dari server');
+    const rows = await res.json();
+    
+    const mapping: Record<string, string> = {};
+    const fullData: Array<{ code: string; region: string; witel: string }> = [];
+    // Bersihkan Set witel agar sepenuhnya dinamis berdasarkan data dari database
+    PURWOKERTO_REGIONS.clear();
+    MAGELANG_REGIONS.clear();
+    
+    rows.forEach((row: any) => {
+      mapping[row.kode_sto] = row.nama_wilayah;
+      fullData.push({ code: row.kode_sto, region: row.nama_wilayah, witel: row.witel });
+      
+      // Dinamis masukkan ke Set Witel jika witel didefinisikan
+      if (row.witel === 'PURWOKERTO') {
+        PURWOKERTO_REGIONS.add(row.nama_wilayah);
+      } else if (row.witel === 'MAGELANG') {
+        MAGELANG_REGIONS.add(row.nama_wilayah);
+      }
+    });
 
-export const STO_MAPPING: Record<string, string> = {
-  // --- WITEL PURWOKERTO & SEKITARNYA ---
-  "PWT": "PURWOKERTO",
-  "BYM": "PURWOKERTO", // BANYUMAS
-  "CLO": "PURWOKERTO", // CILONGOK
-  "KRY": "PURWOKERTO", // KROYA / PURWOKERTO
-  "SDJ": "PURWOKERTO", // SIDAREJA / PURWOKERTO
-  "SUK": "SOKARAJA",
-  "AJB": "AJIBARANG",
-  "BBL": "BUMIAYU",
-  "BJR": "BANJARNEGARA",
-  "BNA": "BANJARNEGARA",
-  "PBG": "PURBALINGGA",
-  "BBT": "PURBALINGGA",
-  "CIL": "CILACAP",
-  "CLC": "CILACAP",
-  "MAN": "CILACAP",
-  "MAO": "CILACAP",
-  "KJA": "KROYA",
-  "MJN": "MAJENANG",
-  "SDA": "SIDAREJA",
-  "WOS": "WONOSOBO", // WONOSOBO (AREA PURWOKERTO)
-  "WNS": "WONOSOBO", // WONOSOBO (AREA PURWOKERTO)
+    STO_MAPPING = mapping;
+    FULL_STO_DATA = fullData;
+  } catch (error) {
+    console.error('Error fetching STO Mapping:', error);
+    // Fallback kosong atau bisa berikan notifikasi
+  }
+}
 
-  // --- WITEL MAGELANG & SEKITARNYA ---
-  "MAG": "MAGELANG",
-  "PRN": "MAGELANG", // PRINGSURAT / MAGELANG
-  "KTW": "MAGELANG", // KUTOARJO / KUTOWINANGUN / MAGELANG
-  "SWT": "MAGELANG", // SAWITAN
-  "GOM": "MAGELANG", // GOMBONG
-  "MTY": "MAGELANG", // MERTOYUDAN
-  "TEM": "MAGELANG", // TEMANGGUNG
-  "TMG": "TEMANGGUNG", // TEMANGGUNG
-  "MUN": "MAGELANG", // MUNTILAN
-  "MTP": "MUNTILAN", // MUNTILAN
-  "KTA": "MAGELANG", // KUTOARJO
-  "PWJ": "PURWOREJO", // PURWOREJO (AREA MAGELANG)
-  "PWR": "PURWOREJO", // PURWOREJO (AREA MAGELANG)
-  "KEB": "KEBUMEN",
+/**
+ * Menambahkan STO baru ke backend XAMPP (Express)
+ */
+export async function addStoMapping(kodeSto: string, namaWilayah: string, witel?: string): Promise<boolean> {
+  try {
+    const res = await fetch('http://localhost:5000/api/stos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kode_sto: kodeSto, nama_wilayah: namaWilayah, witel })
+    });
+    
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Gagal menambahkan STO');
+    }
+    
+    // Refresh data setelah berhasil nambah
+    await fetchStoMapping();
+    return true;
+  } catch (error) {
+    console.error('Error adding STO:', error);
+    throw error;
+  }
+}
 
-  // --- WILAYAH JAWA TENGAH & LAINNYA ---
-  "PKL": "PEKALONGAN",
-  "BTG": "BATANG",
-  "TGL": "TEGAL",
-  "SLW": "SLAWI",
-  "BRB": "BREBES",
-  "BBS": "BREBES",
-  "KTG": "KETANGGUNGAN",
-  "PML": "PEMALANG",
-  "SMG": "SEMARANG",
-  "SLO": "SOLO",
-  "KLT": "KLATEN",
-  "BYL": "BOYOLALI",
-  "SKH": "SUKOHARJO",
-  "WNG": "WONOGIRI",
-  "KRN": "KARANGANYAR",
-  "SRG": "SRAGEN",
-  "KDS": "KUDUS",
-  "PTI": "PATI",
-  "JPR": "JEPARA",
-  "RBG": "REMBANG",
-  "BLA": "BLORA",
-  "CPT": "CEPU",
-  "SLT": "SALATIGA",
-  "UNG": "UNGARAN",
-  "AMB": "AMBARAWA",
-  "KDL": "KENDAL",
-  "WLR": "WELERI",
-  "PWD": "PURWODADI",
-  
-  // --- KOTA BESAR LAINNYA ---
-  "JKT": "JAKARTA",
-  "BDG": "BANDUNG",
-  "SBY": "SURABAYA",
-  "YGY": "YOGYAKARTA",
-};
+/**
+ * Mengubah STO yang ada di backend XAMPP (Express)
+ */
+export async function updateStoMapping(kodeSto: string, namaWilayah: string, witel?: string): Promise<boolean> {
+  try {
+    const res = await fetch(`http://localhost:5000/api/stos/${kodeSto}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nama_wilayah: namaWilayah, witel })
+    });
+    
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Gagal mengubah STO');
+    }
+    
+    await fetchStoMapping();
+    return true;
+  } catch (error) {
+    console.error('Error updating STO:', error);
+    throw error;
+  }
+}
+
+/**
+ * Menghapus STO dari backend XAMPP (Express)
+ */
+export async function deleteStoMapping(kodeSto: string): Promise<boolean> {
+  try {
+    const res = await fetch(`http://localhost:5000/api/stos/${kodeSto}`, {
+      method: 'DELETE',
+    });
+    
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Gagal menghapus STO');
+    }
+    
+    await fetchStoMapping();
+    return true;
+  } catch (error) {
+    console.error('Error deleting STO:', error);
+    throw error;
+  }
+}
 
 /**
  * Daftar region yang termasuk ke dalam Witel Purwokerto
@@ -189,9 +208,13 @@ export function getHeaderAreaTitle(regionNames: string[], hasUnmapped: boolean):
 /**
  * Helper untuk mendapatkan daftar seluruh STO yang terdaftar
  */
-export function getAllRegisteredStos(): Array<{ code: string; region: string }> {
+export function getAllRegisteredStos(): Array<{ code: string; region: string; witel?: string }> {
+  if (FULL_STO_DATA && FULL_STO_DATA.length > 0) {
+    return FULL_STO_DATA;
+  }
   return Object.entries(STO_MAPPING).map(([code, region]) => ({
     code,
     region,
+    witel: 'LAINNYA'
   }));
 }
