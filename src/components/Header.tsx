@@ -2,11 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, FileSpreadsheet } from 'lucide-react';
 import { formatLiveDateTime, detectReportMode } from '../logic/timeDetector';
 
-interface HeaderProps {
-  onOpenStoModal: () => void;
-}
-
-export const Header: React.FC<HeaderProps> = ({ onOpenStoModal }) => {
+export const Header: React.FC = () => {
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
   useEffect(() => {
@@ -54,17 +50,6 @@ export const Header: React.FC<HeaderProps> = ({ onOpenStoModal }) => {
 
         <div className="h-8 w-[1px] bg-slate-200 hidden sm:block"></div>
 
-        {/* STO Mapping Config Button */}
-        <button
-          id="btn-open-sto-modal"
-          onClick={onOpenStoModal}
-          type="button"
-          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-900 hover:bg-slate-50 bg-white border border-slate-200 rounded-xl transition-colors cursor-pointer shadow-xs"
-          title="Lihat dan kelola mapping kode STO"
-        >
-          <BookOpen className="w-4 h-4 text-slate-900" />
-          <span className="hidden md:inline">Data</span> STO
-        </button>
       </div>
     </header>
   );

@@ -16,6 +16,10 @@ export function cleanQuotes(text: string): string {
     .trim();
 }
 
+export interface ParseResult {
+  rows: ParsedOrderRow[];
+}
+
 /**
  * Parser untuk membaca dan mengekstrak data order dari output copy-paste Excel.
  * 
@@ -29,9 +33,9 @@ export function cleanQuotes(text: string): string {
 export function parseExcelOutput(
   rawInput: string,
   selectedOrderTypes: string[] = ['ORDER PSB']
-): ParsedOrderRow[] {
+): ParseResult {
   if (!rawInput || !rawInput.trim()) {
-    return [];
+    return { rows: [] };
   }
 
   const sortedTypes = sortSelectedOrderTypes(selectedOrderTypes);
@@ -222,7 +226,7 @@ export function parseExcelOutput(
     });
   }
 
-  return parsedRows;
+  return { rows: parsedRows };
 }
 
 

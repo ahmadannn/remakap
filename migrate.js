@@ -1,30 +1,24 @@
-import mysql from 'mysql2/promise';
+import Database from 'better-sqlite3';
+import path from 'path';
 
-async function migrateDatabase() {
-  const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'remakap_db',
-  };
-
+function migrateDatabase() {
+  const dbPath = path.resolve('database.sqlite');
   try {
-    const connection = await mysql.createConnection(dbConfig);
+    const db = new Database(dbPath);
     console.log('Menjalankan ALTER TABLE...');
     
-    // Gunakan try-catch di dalam agar jika kolom sudah ada, tidak throw error ke luar
     try {
-      await connection.query('ALTER TABLE sto_mapping ADD COLUMN witel VARCHAR(20) DEFAULT "LAINNYA"');
+      db.exec('ALTER TABLE sto_mapping ADD COLUMN witel TEXT DEFAULT "LAINNYA"');
       console.log('✅ Kolom witel berhasil ditambahkan!');
     } catch (err) {
-      if (err.code === 'ER_DUP_FIELDNAME') {
+      if (err.message.includes('duplicate column name')) {
         console.log('⚡ Kolom witel sudah ada, lanjut...');
       } else {
         throw err;
       }
     }
     
-    connection.end();
+    db.close();
   } catch (error) {
     console.error('❌ Gagal mengubah schema database:', error.message);
   }

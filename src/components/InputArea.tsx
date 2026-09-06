@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ClipboardPaste, Trash2, Zap, Layers, Sparkles, Filter, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
+import { ClipboardPaste, Trash2, Zap, Layers, Filter, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
 import { ORDER_TYPES_LIST } from '../config/orderTypes';
 
 interface InputAreaProps {
@@ -85,28 +85,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
     }
   };
 
-  const handleLoadSample = () => {
-    const sampleTypes = ['ORDER PSB', 'ORDER DO', 'ORDER MO'];
-    setSelectedOrderTypes(sampleTypes);
-    setActiveTab('ORDER PSB');
 
-    setOrderInputs({
-      'ORDER PSB': [
-        'PWT HOTEL GRAND RUMAH INDAH 1002520202 HSI EBIS => COMPLETE COMPLETED sejak 08/20/2026 UMUR 4 HARI',
-        'PWT HOTEL GRAND RUMAH INDAH 1002520263 HSI EBIS => OSS PROVISIONING ISSUED Provisioning Issued sejak 08/21/2026 UMUR 3 HARI',
-        'MAN KEMENTERIAN SOSIAL 1-72918782498 ASTINET => Pickup NTE from SCM CANCLWORK TIF NON FBB FFM DISTRICT PURWOKERTO sejak 08/06/2026 UMUR 18 HARI | BUTUH JT OGP PEMBANGUNAN',
-        'MAN KEMENTERIAN SOSIAL 1-72925914928 ASTINET => Review LME STARTWORK TIF ED REGIONAL JATENG DIY sejak 08/06/2026 UMUR 18 HARI | BUTUH JT OGP PEMBANGUNAN',
-      ].join('\n'),
-      'ORDER DO': [
-        'PWT WMSL RINA HERTIYANTI 1002462232 => COMPLETE Completed sejak 07/07/2026 UMUR 48 HARI',
-        'AJB ROSITA VIA AMANDA 1002500954 => COMPLETE Completed sejak 07/30/2026 UMUR 25 HARI',
-      ].join('\n'),
-      'ORDER MO': [
-        'PWT WMS BAMBANG WIYONO 1002316401 WMS => Service Testing Wifi CANCLWORK TIF PMDA sejak 03/27/2026 UMUR 150 HARI | => DORONG CANCEL TUNGGAKAN 2 BULAN',
-        'BJR RATINI 1002175770 WMS => Approval E2E Testing Wifi COMPLETE TIF PMDA sejak 01/05/2026 UMUR 231 HARI | => DORONG CANCEL TUNGGAKAN 2 BULAN',
-      ].join('\n'),
-    });
-  };
 
   const isMultiType = selectedOrderTypes.length > 1;
 
@@ -262,19 +241,8 @@ export const InputArea: React.FC<InputAreaProps> = ({
         </div>
 
         {/* Quick Helper Actions */}
-        <div className="flex items-center justify-between gap-2">
-          <button
-            id="btn-load-sample"
-            type="button"
-            onClick={handleLoadSample}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-900 bg-white hover:bg-slate-50 border border-slate-200 transition cursor-pointer shadow-xs"
-            title="Muat contoh data output Excel (PSB, DO, MO ke masing-masing kotak)"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-slate-900" />
-            Contoh Multi-Kotak
-          </button>
-
-          {totalInputLines > 0 && (
+        {totalInputLines > 0 && (
+          <div className="flex items-center justify-end gap-2">
             <button
               id="btn-clear-all-inputs"
               type="button"
@@ -285,8 +253,8 @@ export const InputArea: React.FC<InputAreaProps> = ({
               <Trash2 className="w-3.5 h-3.5" />
               Kosongkan Semua
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* KONDISI A: MODE TAB (Jika memilih Mode Tab) */}
         {viewMode === 'tabs' && isMultiType && (

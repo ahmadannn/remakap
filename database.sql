@@ -1,91 +1,89 @@
--- 1. Buat Database
-CREATE DATABASE IF NOT EXISTS remakap_db;
-USE remakap_db;
-
--- 2. Buat Tabel STO Mapping
+-- 1. Buat Tabel STO Mapping
 CREATE TABLE IF NOT EXISTS sto_mapping (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    kode_sto VARCHAR(10) NOT NULL UNIQUE,
-    nama_wilayah VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kode_sto TEXT NOT NULL UNIQUE,
+    nama_wilayah TEXT NOT NULL,
+    witel TEXT DEFAULT 'LAINNYA',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 3. Masukkan Data Awal (Seed Data dari file stoMapping.ts lama)
+-- 2. Masukkan Data Awal (Seed Data)
 -- Witel Purwokerto & Sekitarnya
-INSERT IGNORE INTO sto_mapping (kode_sto, nama_wilayah) VALUES 
-('PWT', 'PURWOKERTO'),
-('BYM', 'PURWOKERTO'),
-('CLO', 'PURWOKERTO'),
-('KRY', 'PURWOKERTO'),
-('SDJ', 'PURWOKERTO'),
-('SUK', 'SOKARAJA'),
-('AJB', 'AJIBARANG'),
-('BBL', 'BUMIAYU'),
-('BJR', 'BANJARNEGARA'),
-('BNA', 'BANJARNEGARA'),
-('PBG', 'PURBALINGGA'),
-('BBT', 'PURBALINGGA'),
-('CIL', 'CILACAP'),
-('CLC', 'CILACAP'),
-('MAN', 'CILACAP'),
-('MAO', 'CILACAP'),
-('KJA', 'KROYA'),
-('MJN', 'MAJENANG'),
-('SDA', 'SIDAREJA'),
-('WOS', 'WONOSOBO'),
-('WNS', 'WONOSOBO');
+INSERT OR IGNORE INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES 
+('PWT', 'PURWOKERTO', 'PURWOKERTO'),
+('BYM', 'PURWOKERTO', 'PURWOKERTO'),
+('CLO', 'PURWOKERTO', 'PURWOKERTO'),
+('KRY', 'PURWOKERTO', 'PURWOKERTO'),
+('SDJ', 'PURWOKERTO', 'PURWOKERTO'),
+('SUK', 'SOKARAJA', 'PURWOKERTO'),
+('AJB', 'AJIBARANG', 'PURWOKERTO'),
+('BBL', 'BUMIAYU', 'PURWOKERTO'),
+('BJR', 'BANJARNEGARA', 'PURWOKERTO'),
+('BNA', 'BANJARNEGARA', 'PURWOKERTO'),
+('PBG', 'PURBALINGGA', 'PURWOKERTO'),
+('BBT', 'PURBALINGGA', 'PURWOKERTO'),
+('CIL', 'CILACAP', 'PURWOKERTO'),
+('CLC', 'CILACAP', 'PURWOKERTO'),
+('MAN', 'CILACAP', 'PURWOKERTO'),
+('MAO', 'CILACAP', 'PURWOKERTO'),
+('KJA', 'KROYA', 'PURWOKERTO'),
+('MJN', 'MAJENANG', 'PURWOKERTO'),
+('SDA', 'SIDAREJA', 'PURWOKERTO'),
+('WOS', 'WONOSOBO', 'PURWOKERTO'),
+('WNS', 'WONOSOBO', 'PURWOKERTO');
 
 -- Witel Magelang & Sekitarnya
-INSERT IGNORE INTO sto_mapping (kode_sto, nama_wilayah) VALUES 
-('MAG', 'MAGELANG'),
-('PRN', 'MAGELANG'),
-('KTW', 'MAGELANG'),
-('SWT', 'MAGELANG'),
-('GOM', 'MAGELANG'),
-('MTY', 'MAGELANG'),
-('TEM', 'MAGELANG'),
-('TMG', 'TEMANGGUNG'),
-('MUN', 'MAGELANG'),
-('MTP', 'MUNTILAN'),
-('KTA', 'MAGELANG'),
-('PWJ', 'PURWOREJO'),
-('PWR', 'PURWOREJO'),
-('KEB', 'KEBUMEN');
+INSERT OR IGNORE INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES 
+('MAG', 'MAGELANG', 'MAGELANG'),
+('PRN', 'MAGELANG', 'MAGELANG'),
+('KTW', 'MAGELANG', 'MAGELANG'),
+('SWT', 'MAGELANG', 'MAGELANG'),
+('GOM', 'MAGELANG', 'MAGELANG'),
+('MTY', 'MAGELANG', 'MAGELANG'),
+('TEM', 'MAGELANG', 'MAGELANG'),
+('TMG', 'TEMANGGUNG', 'MAGELANG'),
+('MUN', 'MAGELANG', 'MAGELANG'),
+('MTP', 'MUNTILAN', 'MAGELANG'),
+('KTA', 'MAGELANG', 'MAGELANG'),
+('PWJ', 'PURWOREJO', 'MAGELANG'),
+('PWR', 'PURWOREJO', 'MAGELANG'),
+('KEB', 'KEBUMEN', 'MAGELANG');
 
 -- Wilayah Jawa Tengah & Lainnya
-INSERT IGNORE INTO sto_mapping (kode_sto, nama_wilayah) VALUES 
-('PKL', 'PEKALONGAN'),
-('BTG', 'BATANG'),
-('TGL', 'TEGAL'),
-('SLW', 'SLAWI'),
-('BRB', 'BREBES'),
-('BBS', 'BREBES'),
-('KTG', 'KETANGGUNGAN'),
-('PML', 'PEMALANG'),
-('SMG', 'SEMARANG'),
-('SLO', 'SOLO'),
-('KLT', 'KLATEN'),
-('BYL', 'BOYOLALI'),
-('SKH', 'SUKOHARJO'),
-('WNG', 'WONOGIRI'),
-('KRN', 'KARANGANYAR'),
-('SRG', 'SRAGEN'),
-('KDS', 'KUDUS'),
-('PTI', 'PATI'),
-('JPR', 'JEPARA'),
-('RBG', 'REMBANG'),
-('BLA', 'BLORA'),
-('CPT', 'CEPU'),
-('SLT', 'SALATIGA'),
-('UNG', 'UNGARAN'),
-('AMB', 'AMBARAWA'),
-('KDL', 'KENDAL'),
-('WLR', 'WELERI'),
-('PWD', 'PURWODADI');
+INSERT OR IGNORE INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES 
+('PKL', 'PEKALONGAN', 'LAINNYA'),
+('BTG', 'BATANG', 'LAINNYA'),
+('TGL', 'TEGAL', 'LAINNYA'),
+('SLW', 'SLAWI', 'LAINNYA'),
+('BRB', 'BREBES', 'LAINNYA'),
+('BBS', 'BREBES', 'LAINNYA'),
+('KTG', 'KETANGGUNGAN', 'LAINNYA'),
+('PML', 'PEMALANG', 'LAINNYA'),
+('SMG', 'SEMARANG', 'LAINNYA'),
+('SLO', 'SOLO', 'LAINNYA'),
+('KLT', 'KLATEN', 'LAINNYA'),
+('BYL', 'BOYOLALI', 'LAINNYA'),
+('SKH', 'SUKOHARJO', 'LAINNYA'),
+('WNG', 'WONOGIRI', 'LAINNYA'),
+('KRN', 'KARANGANYAR', 'LAINNYA'),
+('SRG', 'SRAGEN', 'LAINNYA'),
+('KDS', 'KUDUS', 'LAINNYA'),
+('PTI', 'PATI', 'LAINNYA'),
+('JPR', 'JEPARA', 'LAINNYA'),
+('RBG', 'REMBANG', 'LAINNYA'),
+('BLA', 'BLORA', 'LAINNYA'),
+('CPT', 'CEPU', 'LAINNYA'),
+('SLT', 'SALATIGA', 'LAINNYA'),
+('UNG', 'UNGARAN', 'LAINNYA'),
+('AMB', 'AMBARAWA', 'LAINNYA'),
+('KDL', 'KENDAL', 'LAINNYA'),
+('WLR', 'WELERI', 'LAINNYA'),
+('PWD', 'PURWODADI', 'LAINNYA');
 
 -- Kota Besar Lainnya
-INSERT IGNORE INTO sto_mapping (kode_sto, nama_wilayah) VALUES 
-('JKT', 'JAKARTA'),
-('BDG', 'BANDUNG'),
-('SBY', 'SURABAYA'),
-('YGY', 'YOGYAKARTA');
+INSERT OR IGNORE INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES 
+('JKT', 'JAKARTA', 'LAINNYA'),
+('BDG', 'BANDUNG', 'LAINNYA'),
+('SBY', 'SURABAYA', 'LAINNYA'),
+('YGY', 'YOGYAKARTA', 'LAINNYA');
+

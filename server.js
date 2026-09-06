@@ -1,6 +1,8 @@
 import express from 'express';
-import mysql from 'mysql2/promise';
+import Database from 'better-sqlite3';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
 
 const app = express();
 const PORT = 5000;
@@ -9,39 +11,37 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
-// Konfigurasi Database (Sesuaikan dengan setting XAMPP default)
-const dbConfig = {
-  host: 'localhost',
-  user: 'root',      // Username default XAMPP
-  password: '',      // Password default XAMPP biasanya kosong
-  database: 'remakap_db',
-};
+// Konfigurasi & Inisialisasi Database SQLite
+const dbPath = path.resolve('database.sqlite');
+const db = new Database(dbPath);
+db.pragma('journal_mode = WAL');
 
-// Cek Koneksi Database
-async function testConnection() {
+// Cek & Inisialisasi Skema Database secara Otomatis
+function initDatabase() {
   try {
-    const connection = await mysql.createConnection(dbConfig);
-    console.log('✅ Berhasil terhubung ke database MySQL (remakap_db)');
-    connection.end();
+    const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='sto_mapping'").get();
+    if (!tableCheck && fs.existsSync('database.sql')) {
+      console.log('📦 Menginisialisasi tabel database dari database.sql...');
+      const sqlScript = fs.readFileSync('database.sql', 'utf8');
+      db.exec(sqlScript);
+      console.log('✅ Skema database & data awal berhasil dibuat di database.sqlite');
+    } else {
+      console.log('✅ Berhasil terhubung ke database SQLite (database.sqlite)');
+    }
   } catch (error) {
-    console.error('❌ Gagal terhubung ke database:', error.message);
-    console.log('Pastikan XAMPP (Apache & MySQL) sudah berjalan!');
+    console.error('❌ Gagal menginisialisasi database SQLite:', error.message);
   }
 }
-testConnection();
+initDatabase();
 
 // ==========================================
 // ENDPOINT API
 // ==========================================
 
 // 1. GET /api/stos -> Ambil semua daftar STO
-app.get('/api/stos', async (req, res) => {
+app.get('/api/stos', (req, res) => {
   try {
-    const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute('SELECT kode_sto, nama_wilayah, witel FROM sto_mapping ORDER BY nama_wilayah ASC, kode_sto ASC');
-    connection.end();
-    
-    // Return array of objects langsung agar frontend bisa membaca witel
+    const rows = db.prepare('SELECT kode_sto, nama_wilayah, witel FROM sto_mapping ORDER BY nama_wilayah ASC, kode_sto ASC').all();
     res.json(rows);
   } catch (error) {
     console.error('Error fetching STOs:', error);
@@ -50,7 +50,7 @@ app.get('/api/stos', async (req, res) => {
 });
 
 // 2. POST /api/stos -> Tambah STO baru
-app.post('/api/stos', async (req, res) => {
+app.post('/api/stos', (req, res) => {
   const { kode_sto, nama_wilayah, witel } = req.body;
 
   if (!kode_sto || !nama_wilayah) {
@@ -60,23 +60,19 @@ app.post('/api/stos', async (req, res) => {
   const finalWitel = witel ? witel.toUpperCase() : 'LAINNYA';
 
   try {
-    const connection = await mysql.createConnection(dbConfig);
-    
     // Cek apakah kode STO sudah ada
-    const [existing] = await connection.execute('SELECT id FROM sto_mapping WHERE kode_sto = ?', [kode_sto.toUpperCase()]);
-    if (existing.length > 0) {
-      connection.end();
+    const existing = db.prepare('SELECT id FROM sto_mapping WHERE kode_sto = ?').get(kode_sto.toUpperCase());
+    if (existing) {
       return res.status(409).json({ error: 'Kode STO sudah terdaftar' });
     }
 
     // Insert ke database
-    await connection.execute('INSERT INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES (?, ?, ?)', [
+    db.prepare('INSERT INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES (?, ?, ?)').run(
       kode_sto.toUpperCase(),
       nama_wilayah.toUpperCase(),
       finalWitel
-    ]);
-    
-    connection.end();
+    );
+
     res.status(201).json({ message: 'STO berhasil ditambahkan' });
   } catch (error) {
     console.error('Error inserting STO:', error);
@@ -85,7 +81,7 @@ app.post('/api/stos', async (req, res) => {
 });
 
 // 3. PUT /api/stos/:kode_sto -> Edit STO (edit nama wilayah & witel)
-app.put('/api/stos/:kode_sto', async (req, res) => {
+app.put('/api/stos/:kode_sto', (req, res) => {
   const { kode_sto } = req.params;
   const { nama_wilayah, witel } = req.body;
 
@@ -96,15 +92,11 @@ app.put('/api/stos/:kode_sto', async (req, res) => {
   const finalWitel = witel ? witel.toUpperCase() : 'LAINNYA';
 
   try {
-    const connection = await mysql.createConnection(dbConfig);
-    const [result] = await connection.execute(
-      'UPDATE sto_mapping SET nama_wilayah = ?, witel = ? WHERE kode_sto = ?',
-      [nama_wilayah.toUpperCase(), finalWitel, kode_sto.toUpperCase()]
-    );
-    
-    connection.end();
+    const result = db.prepare(
+      'UPDATE sto_mapping SET nama_wilayah = ?, witel = ? WHERE kode_sto = ?'
+    ).run(nama_wilayah.toUpperCase(), finalWitel, kode_sto.toUpperCase());
 
-    if (result.affectedRows === 0) {
+    if (result.changes === 0) {
       return res.status(404).json({ error: 'Kode STO tidak ditemukan' });
     }
 
@@ -116,19 +108,15 @@ app.put('/api/stos/:kode_sto', async (req, res) => {
 });
 
 // 4. DELETE /api/stos/:kode_sto -> Hapus STO
-app.delete('/api/stos/:kode_sto', async (req, res) => {
+app.delete('/api/stos/:kode_sto', (req, res) => {
   const { kode_sto } = req.params;
 
   try {
-    const connection = await mysql.createConnection(dbConfig);
-    const [result] = await connection.execute(
-      'DELETE FROM sto_mapping WHERE kode_sto = ?',
-      [kode_sto.toUpperCase()]
-    );
-    
-    connection.end();
+    const result = db.prepare(
+      'DELETE FROM sto_mapping WHERE kode_sto = ?'
+    ).run(kode_sto.toUpperCase());
 
-    if (result.affectedRows === 0) {
+    if (result.changes === 0) {
       return res.status(404).json({ error: 'Kode STO tidak ditemukan' });
     }
 
@@ -138,6 +126,7 @@ app.delete('/api/stos/:kode_sto', async (req, res) => {
     res.status(500).json({ error: 'Gagal menghapus data dari database' });
   }
 });
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend Server berjalan di http://localhost:${PORT}`);

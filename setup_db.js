@@ -1,38 +1,24 @@
-import mysql from 'mysql2/promise';
+import Database from 'better-sqlite3';
 import fs from 'fs';
+import path from 'path';
 
-async function setupDatabase() {
-  const dbConfig = {
-    host: 'localhost',
-    user: 'root',
-    password: '',
-  };
-
+function setupDatabase() {
+  const dbPath = path.resolve('database.sqlite');
   try {
-    console.log('Menghubungkan ke MySQL...');
-    // Connect without specifying database to create it
-    const connection = await mysql.createConnection(dbConfig);
+    console.log(`Menghubungkan ke database SQLite (${dbPath})...`);
+    const db = new Database(dbPath);
     
-    console.log('Membuat database remakap_db...');
-    await connection.query('CREATE DATABASE IF NOT EXISTS remakap_db');
-    
-    console.log('Beralih ke database remakap_db...');
-    await connection.query('USE remakap_db');
+    // Enable WAL mode for better concurrency performance
+    db.pragma('journal_mode = WAL');
 
     console.log('Membaca file database.sql...');
     const sqlScript = fs.readFileSync('database.sql', 'utf8');
-    
-    // Split by semicolons for multiple queries
-    const queries = sqlScript.split(';').filter(q => q.trim().length > 0);
-    
-    for (let query of queries) {
-      if (query.trim()) {
-        await connection.query(query);
-      }
-    }
-    
-    console.log('✅ Database berhasil dibuat dan data berhasil dimasukkan!');
-    connection.end();
+
+    // Exec executes multi-statement SQL script
+    db.exec(sqlScript);
+
+    console.log('✅ Database SQLite berhasil dibuat dan data berhasil dimasukkan!');
+    db.close();
   } catch (error) {
     console.error('❌ Gagal melakukan setup database:', error.message);
   }

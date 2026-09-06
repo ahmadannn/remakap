@@ -8,11 +8,10 @@
  * 2. ORDER DO
  * 3. ORDER MO
  * 4. ORDER IHLD ON GOING
- * 5. Pengajuan JT PWT & Magelang
- * 6. ORDER DIGITAL
+ * 2. ORDER DIGITAL
  * 7. ORDER OBL
  * 8. ORDER WMS DENGAN AP BARU
- * 9. ORDER AREA LAIN (MILIK AM INTERNAL)
+ * 9. ORDER AREA LAIN
  */
 
 export const ORDER_TYPES_LIST = [
@@ -20,11 +19,10 @@ export const ORDER_TYPES_LIST = [
   'ORDER DO',
   'ORDER MO',
   'ORDER IHLD ON GOING',
-  'Pengajuan JT PWT & Magelang',
   'ORDER DIGITAL',
   'ORDER OBL',
   'ORDER WMS DENGAN AP BARU',
-  'ORDER AREA LAIN (MILIK AM INTERNAL)',
+  'ORDER AREA LAIN',
 ] as const;
 
 export type OrderType = (typeof ORDER_TYPES_LIST)[number];
@@ -72,14 +70,11 @@ export function matchOrderTypeHeader(line: string): string | null {
   }
 
   // Pencocokan ketat untuk kata kunci spesifik
-  if (clean === 'PENGAJUAN JT' || clean === 'JT PWT') {
-    return 'Pengajuan JT PWT & Magelang';
-  }
   if (clean === 'IHLD' || clean === 'ORDER IHLD' || clean === 'IHLD ON GOING') {
     return 'ORDER IHLD ON GOING';
   }
   if (clean === 'WMS AP BARU' || clean === 'ORDER WMS AP BARU' || clean === 'WMS DENGAN AP BARU') {
-    return 'ORDER WMS DENGAN AP BARU';
+    return 'ORDER WMS AP BARU';
   }
   if (clean === 'AREA LAIN' || clean === 'AM INTERNAL') {
     return 'ORDER AREA LAIN (MILIK AM INTERNAL)';

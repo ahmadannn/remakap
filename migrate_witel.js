@@ -1,4 +1,5 @@
-import mysql from 'mysql2/promise';
+import Database from 'better-sqlite3';
+import path from 'path';
 
 const PURWOKERTO_REGIONS = new Set([
   "PURWOKERTO", "BANJARNEGARA", "PURBALINGGA", "CILACAP", "SOKARAJA",
@@ -10,12 +11,14 @@ const MAGELANG_REGIONS = new Set([
   "PURWOREJO", "KUTOARJO", "MUNTILAN"
 ]);
 
-async function migrateWitel() {
-  const dbConfig = { host: 'localhost', user: 'root', password: '', database: 'remakap_db' };
+function migrateWitel() {
+  const dbPath = path.resolve('database.sqlite');
   try {
-    const connection = await mysql.createConnection(dbConfig);
-    const [rows] = await connection.execute('SELECT id, nama_wilayah, witel FROM sto_mapping');
+    const db = new Database(dbPath);
+    const rows = db.prepare('SELECT id, nama_wilayah, witel FROM sto_mapping').all();
     
+    const updateStmt = db.prepare('UPDATE sto_mapping SET witel = ? WHERE id = ?');
+
     for (const row of rows) {
       if (!row.witel || row.witel === 'LAINNYA') {
         let newWitel = 'LAINNYA';
@@ -26,14 +29,14 @@ async function migrateWitel() {
         }
         
         if (newWitel !== 'LAINNYA') {
-          await connection.execute('UPDATE sto_mapping SET witel = ? WHERE id = ?', [newWitel, row.id]);
+          updateStmt.run(newWitel, row.id);
           console.log(`Updated ${row.nama_wilayah} to ${newWitel}`);
         }
       }
     }
     
     console.log('Migration complete.');
-    connection.end();
+    db.close();
   } catch (err) {
     console.error(err);
   }
