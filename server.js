@@ -17,11 +17,14 @@ function getDbClient() {
 
   try {
     let dbUrl = process.env.TURSO_DATABASE_URL || 'file:database.sqlite';
-    const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
+    let authToken = process.env.TURSO_AUTH_TOKEN || undefined;
 
-    // Jika di Vercel/Cloud dan URL menggunakan libsql://, ubah ke https:// agar kompatibel penuh dengan HTTP Serverless
-    if (dbUrl.startsWith('libsql://')) {
-      dbUrl = dbUrl.replace('libsql://', 'https://');
+    // Sanitize: bersihkan spasi, tanda kutip (" atau '), dan newlines dari env vars
+    if (typeof dbUrl === 'string') {
+      dbUrl = dbUrl.trim().replace(/^["']|["']$/g, '');
+    }
+    if (typeof authToken === 'string') {
+      authToken = authToken.trim().replace(/^["']|["']$/g, '');
     }
 
     db = createClient({
@@ -41,11 +44,16 @@ const router = express.Router();
 // Test Endpoint untuk cek status Environment Variable Vercel
 router.get('/test', (req, res) => {
   const client = getDbClient();
+  const rawUrl = process.env.TURSO_DATABASE_URL;
+  const rawToken = process.env.TURSO_AUTH_TOKEN;
+
   res.json({
     status: 'ok',
-    hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
-    tursoUrlPreview: process.env.TURSO_DATABASE_URL ? process.env.TURSO_DATABASE_URL.substring(0, 20) + '...' : 'NOT_SET',
-    hasTursoToken: !!process.env.TURSO_AUTH_TOKEN,
+    hasTursoUrl: !!rawUrl,
+    rawUrlLength: rawUrl ? rawUrl.length : 0,
+    rawUrlCharCodes: rawUrl ? Array.from(rawUrl).map(c => c.charCodeAt(0)) : [],
+    rawUrlValue: rawUrl || 'NOT_SET',
+    hasTursoToken: !!rawToken,
     dbClientCreated: !!client,
     dbInitError: dbInitError
   });
