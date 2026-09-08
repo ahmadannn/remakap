@@ -7,7 +7,7 @@ export let FULL_STO_DATA: Array<{ code: string; region: string; witel: string }>
  */
 export async function fetchStoMapping(): Promise<void> {
   try {
-    const res = await fetch('http://localhost:5000/api/stos');
+    const res = await fetch('/api/stos');
     if (!res.ok) throw new Error('Gagal mengambil data dari server');
     const rows = await res.json();
     
@@ -42,7 +42,7 @@ export async function fetchStoMapping(): Promise<void> {
  */
 export async function addStoMapping(kodeSto: string, namaWilayah: string, witel?: string): Promise<boolean> {
   try {
-    const res = await fetch('http://localhost:5000/api/stos', {
+    const res = await fetch('/api/stos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ kode_sto: kodeSto, nama_wilayah: namaWilayah, witel })
@@ -67,7 +67,7 @@ export async function addStoMapping(kodeSto: string, namaWilayah: string, witel?
  */
 export async function updateStoMapping(kodeSto: string, namaWilayah: string, witel?: string): Promise<boolean> {
   try {
-    const res = await fetch(`http://localhost:5000/api/stos/${kodeSto}`, {
+    const res = await fetch(`/api/stos/${kodeSto}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nama_wilayah: namaWilayah, witel })
@@ -91,7 +91,7 @@ export async function updateStoMapping(kodeSto: string, namaWilayah: string, wit
  */
 export async function deleteStoMapping(kodeSto: string): Promise<boolean> {
   try {
-    const res = await fetch(`http://localhost:5000/api/stos/${kodeSto}`, {
+    const res = await fetch(`/api/stos/${kodeSto}`, {
       method: 'DELETE',
     });
     
