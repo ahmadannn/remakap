@@ -9,45 +9,69 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Konfigurasi Database Turso (Cloud) / Local Fallback
-const dbUrl = process.env.TURSO_DATABASE_URL || 'file:database.sqlite';
-const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
+let db = null;
+let dbInitError = null;
 
-let db;
-try {
-  db = createClient({
-    url: dbUrl,
-    authToken: authToken,
-  });
-} catch (err) {
-  console.error('Failed to create LibSQL client:', err);
+function getDbClient() {
+  if (db) return db;
+
+  try {
+    let dbUrl = process.env.TURSO_DATABASE_URL || 'file:database.sqlite';
+    const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
+
+    // Jika di Vercel/Cloud dan URL menggunakan libsql://, ubah ke https:// agar kompatibel penuh dengan HTTP Serverless
+    if (dbUrl.startsWith('libsql://')) {
+      dbUrl = dbUrl.replace('libsql://', 'https://');
+    }
+
+    db = createClient({
+      url: dbUrl,
+      authToken: authToken,
+    });
+    return db;
+  } catch (err) {
+    dbInitError = err.message || String(err);
+    console.error('Failed to create LibSQL client:', err);
+    return null;
+  }
 }
 
 const router = express.Router();
 
 // Test Endpoint untuk cek status Environment Variable Vercel
 router.get('/test', (req, res) => {
+  const client = getDbClient();
   res.json({
     status: 'ok',
     hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
     tursoUrlPreview: process.env.TURSO_DATABASE_URL ? process.env.TURSO_DATABASE_URL.substring(0, 20) + '...' : 'NOT_SET',
     hasTursoToken: !!process.env.TURSO_AUTH_TOKEN,
+    dbClientCreated: !!client,
+    dbInitError: dbInitError
   });
 });
 
 // 1. GET /stos -> Ambil semua daftar STO
 router.get('/stos', async (req, res) => {
   try {
-    if (!db) {
-      throw new Error('Database client tidak terinisialisasi');
+    const client = getDbClient();
+    if (!client) {
+      return res.status(500).json({ 
+        error: 'Database client gagal terinisialisasi', 
+        details: dbInitError,
+        hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
+        hasTursoToken: !!process.env.TURSO_AUTH_TOKEN
+      });
     }
-    const result = await db.execute('SELECT kode_sto, nama_wilayah, witel FROM sto_mapping ORDER BY nama_wilayah ASC, kode_sto ASC');
+
+    const result = await client.execute('SELECT kode_sto, nama_wilayah, witel FROM sto_mapping ORDER BY nama_wilayah ASC, kode_sto ASC');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching STOs:', error);
     res.status(500).json({ 
       error: 'Gagal mengambil data dari database', 
       message: error.message,
+      stack: error.stack,
       hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
       hasTursoToken: !!process.env.TURSO_AUTH_TOKEN
     });
@@ -65,7 +89,10 @@ router.post('/stos', async (req, res) => {
   const finalWitel = witel ? witel.toUpperCase() : 'LAINNYA';
 
   try {
-    const existing = await db.execute({
+    const client = getDbClient();
+    if (!client) throw new Error('Database client gagal terinisialisasi: ' + dbInitError);
+
+    const existing = await client.execute({
       sql: 'SELECT id FROM sto_mapping WHERE kode_sto = ?',
       args: [kode_sto.toUpperCase()]
     });
@@ -74,7 +101,7 @@ router.post('/stos', async (req, res) => {
       return res.status(409).json({ error: 'Kode STO sudah terdaftar' });
     }
 
-    await db.execute({
+    await client.execute({
       sql: 'INSERT INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES (?, ?, ?)',
       args: [kode_sto.toUpperCase(), nama_wilayah.toUpperCase(), finalWitel]
     });
@@ -98,7 +125,10 @@ router.put('/stos/:kode_sto', async (req, res) => {
   const finalWitel = witel ? witel.toUpperCase() : 'LAINNYA';
 
   try {
-    const result = await db.execute({
+    const client = getDbClient();
+    if (!client) throw new Error('Database client gagal terinisialisasi: ' + dbInitError);
+
+    const result = await client.execute({
       sql: 'UPDATE sto_mapping SET nama_wilayah = ?, witel = ? WHERE kode_sto = ?',
       args: [nama_wilayah.toUpperCase(), finalWitel, kode_sto.toUpperCase()]
     });
@@ -119,7 +149,10 @@ router.delete('/stos/:kode_sto', async (req, res) => {
   const { kode_sto } = req.params;
 
   try {
-    const result = await db.execute({
+    const client = getDbClient();
+    if (!client) throw new Error('Database client gagal terinisialisasi: ' + dbInitError);
+
+    const result = await client.execute({
       sql: 'DELETE FROM sto_mapping WHERE kode_sto = ?',
       args: [kode_sto.toUpperCase()]
     });
