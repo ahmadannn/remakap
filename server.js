@@ -13,21 +13,44 @@ app.use(express.json());
 const dbUrl = process.env.TURSO_DATABASE_URL || 'file:database.sqlite';
 const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
 
-const db = createClient({
-  url: dbUrl,
-  authToken: authToken,
-});
+let db;
+try {
+  db = createClient({
+    url: dbUrl,
+    authToken: authToken,
+  });
+} catch (err) {
+  console.error('Failed to create LibSQL client:', err);
+}
 
 const router = express.Router();
+
+// Test Endpoint untuk cek status Environment Variable Vercel
+router.get('/test', (req, res) => {
+  res.json({
+    status: 'ok',
+    hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
+    tursoUrlPreview: process.env.TURSO_DATABASE_URL ? process.env.TURSO_DATABASE_URL.substring(0, 20) + '...' : 'NOT_SET',
+    hasTursoToken: !!process.env.TURSO_AUTH_TOKEN,
+  });
+});
 
 // 1. GET /stos -> Ambil semua daftar STO
 router.get('/stos', async (req, res) => {
   try {
+    if (!db) {
+      throw new Error('Database client tidak terinisialisasi');
+    }
     const result = await db.execute('SELECT kode_sto, nama_wilayah, witel FROM sto_mapping ORDER BY nama_wilayah ASC, kode_sto ASC');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching STOs:', error);
-    res.status(500).json({ error: 'Gagal mengambil data dari database', details: error.message });
+    res.status(500).json({ 
+      error: 'Gagal mengambil data dari database', 
+      message: error.message,
+      hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
+      hasTursoToken: !!process.env.TURSO_AUTH_TOKEN
+    });
   }
 });
 
@@ -59,7 +82,7 @@ router.post('/stos', async (req, res) => {
     res.status(201).json({ message: 'STO berhasil ditambahkan' });
   } catch (error) {
     console.error('Error inserting STO:', error);
-    res.status(500).json({ error: 'Gagal menyimpan data ke database', details: error.message });
+    res.status(500).json({ error: 'Gagal menyimpan data ke database', message: error.message });
   }
 });
 
@@ -87,7 +110,7 @@ router.put('/stos/:kode_sto', async (req, res) => {
     res.json({ message: 'STO berhasil diupdate' });
   } catch (error) {
     console.error('Error updating STO:', error);
-    res.status(500).json({ error: 'Gagal mengupdate data di database', details: error.message });
+    res.status(500).json({ error: 'Gagal mengupdate data di database', message: error.message });
   }
 });
 
@@ -108,7 +131,7 @@ router.delete('/stos/:kode_sto', async (req, res) => {
     res.json({ message: 'STO berhasil dihapus' });
   } catch (error) {
     console.error('Error deleting STO:', error);
-    res.status(500).json({ error: 'Gagal menghapus data dari database', details: error.message });
+    res.status(500).json({ error: 'Gagal menghapus data dari database', message: error.message });
   }
 });
 
