@@ -18,23 +18,21 @@ const db = createClient({
   authToken: authToken,
 });
 
-// ==========================================
-// ENDPOINT API
-// ==========================================
+const router = express.Router();
 
-// 1. GET /api/stos -> Ambil semua daftar STO
-app.get('/api/stos', async (req, res) => {
+// 1. GET /stos -> Ambil semua daftar STO
+router.get('/stos', async (req, res) => {
   try {
     const result = await db.execute('SELECT kode_sto, nama_wilayah, witel FROM sto_mapping ORDER BY nama_wilayah ASC, kode_sto ASC');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching STOs:', error);
-    res.status(500).json({ error: 'Gagal mengambil data dari database' });
+    res.status(500).json({ error: 'Gagal mengambil data dari database', details: error.message });
   }
 });
 
-// 2. POST /api/stos -> Tambah STO baru
-app.post('/api/stos', async (req, res) => {
+// 2. POST /stos -> Tambah STO baru
+router.post('/stos', async (req, res) => {
   const { kode_sto, nama_wilayah, witel } = req.body;
 
   if (!kode_sto || !nama_wilayah) {
@@ -44,7 +42,6 @@ app.post('/api/stos', async (req, res) => {
   const finalWitel = witel ? witel.toUpperCase() : 'LAINNYA';
 
   try {
-    // Cek apakah kode STO sudah ada
     const existing = await db.execute({
       sql: 'SELECT id FROM sto_mapping WHERE kode_sto = ?',
       args: [kode_sto.toUpperCase()]
@@ -54,7 +51,6 @@ app.post('/api/stos', async (req, res) => {
       return res.status(409).json({ error: 'Kode STO sudah terdaftar' });
     }
 
-    // Insert ke database
     await db.execute({
       sql: 'INSERT INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES (?, ?, ?)',
       args: [kode_sto.toUpperCase(), nama_wilayah.toUpperCase(), finalWitel]
@@ -63,12 +59,12 @@ app.post('/api/stos', async (req, res) => {
     res.status(201).json({ message: 'STO berhasil ditambahkan' });
   } catch (error) {
     console.error('Error inserting STO:', error);
-    res.status(500).json({ error: 'Gagal menyimpan data ke database' });
+    res.status(500).json({ error: 'Gagal menyimpan data ke database', details: error.message });
   }
 });
 
-// 3. PUT /api/stos/:kode_sto -> Edit STO
-app.put('/api/stos/:kode_sto', async (req, res) => {
+// 3. PUT /stos/:kode_sto -> Edit STO
+router.put('/stos/:kode_sto', async (req, res) => {
   const { kode_sto } = req.params;
   const { nama_wilayah, witel } = req.body;
 
@@ -91,12 +87,12 @@ app.put('/api/stos/:kode_sto', async (req, res) => {
     res.json({ message: 'STO berhasil diupdate' });
   } catch (error) {
     console.error('Error updating STO:', error);
-    res.status(500).json({ error: 'Gagal mengupdate data di database' });
+    res.status(500).json({ error: 'Gagal mengupdate data di database', details: error.message });
   }
 });
 
-// 4. DELETE /api/stos/:kode_sto -> Hapus STO
-app.delete('/api/stos/:kode_sto', async (req, res) => {
+// 4. DELETE /stos/:kode_sto -> Hapus STO
+router.delete('/stos/:kode_sto', async (req, res) => {
   const { kode_sto } = req.params;
 
   try {
@@ -112,9 +108,13 @@ app.delete('/api/stos/:kode_sto', async (req, res) => {
     res.json({ message: 'STO berhasil dihapus' });
   } catch (error) {
     console.error('Error deleting STO:', error);
-    res.status(500).json({ error: 'Gagal menghapus data dari database' });
+    res.status(500).json({ error: 'Gagal menghapus data dari database', details: error.message });
   }
 });
+
+// Mounting router ke /api dan root agar kompatibel dengan semua Vercel rewrite
+app.use('/api', router);
+app.use('/', router);
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
