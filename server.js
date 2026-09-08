@@ -1,48 +1,32 @@
 import express from 'express';
-import Database from 'better-sqlite3';
 import cors from 'cors';
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '@libsql/client';
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Konfigurasi & Inisialisasi Database SQLite
-const dbPath = path.resolve('database.sqlite');
-const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
+// Konfigurasi Database Turso (Cloud) / Local Fallback
+const dbUrl = process.env.TURSO_DATABASE_URL || 'file:database.sqlite';
+const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
 
-// Cek & Inisialisasi Skema Database secara Otomatis
-function initDatabase() {
-  try {
-    const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='sto_mapping'").get();
-    if (!tableCheck && fs.existsSync('database.sql')) {
-      console.log('📦 Menginisialisasi tabel database dari database.sql...');
-      const sqlScript = fs.readFileSync('database.sql', 'utf8');
-      db.exec(sqlScript);
-      console.log('✅ Skema database & data awal berhasil dibuat di database.sqlite');
-    } else {
-      console.log('✅ Berhasil terhubung ke database SQLite (database.sqlite)');
-    }
-  } catch (error) {
-    console.error('❌ Gagal menginisialisasi database SQLite:', error.message);
-  }
-}
-initDatabase();
+const db = createClient({
+  url: dbUrl,
+  authToken: authToken,
+});
 
 // ==========================================
 // ENDPOINT API
 // ==========================================
 
 // 1. GET /api/stos -> Ambil semua daftar STO
-app.get('/api/stos', (req, res) => {
+app.get('/api/stos', async (req, res) => {
   try {
-    const rows = db.prepare('SELECT kode_sto, nama_wilayah, witel FROM sto_mapping ORDER BY nama_wilayah ASC, kode_sto ASC').all();
-    res.json(rows);
+    const result = await db.execute('SELECT kode_sto, nama_wilayah, witel FROM sto_mapping ORDER BY nama_wilayah ASC, kode_sto ASC');
+    res.json(result.rows);
   } catch (error) {
     console.error('Error fetching STOs:', error);
     res.status(500).json({ error: 'Gagal mengambil data dari database' });
@@ -50,7 +34,7 @@ app.get('/api/stos', (req, res) => {
 });
 
 // 2. POST /api/stos -> Tambah STO baru
-app.post('/api/stos', (req, res) => {
+app.post('/api/stos', async (req, res) => {
   const { kode_sto, nama_wilayah, witel } = req.body;
 
   if (!kode_sto || !nama_wilayah) {
@@ -61,17 +45,20 @@ app.post('/api/stos', (req, res) => {
 
   try {
     // Cek apakah kode STO sudah ada
-    const existing = db.prepare('SELECT id FROM sto_mapping WHERE kode_sto = ?').get(kode_sto.toUpperCase());
-    if (existing) {
+    const existing = await db.execute({
+      sql: 'SELECT id FROM sto_mapping WHERE kode_sto = ?',
+      args: [kode_sto.toUpperCase()]
+    });
+
+    if (existing.rows.length > 0) {
       return res.status(409).json({ error: 'Kode STO sudah terdaftar' });
     }
 
     // Insert ke database
-    db.prepare('INSERT INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES (?, ?, ?)').run(
-      kode_sto.toUpperCase(),
-      nama_wilayah.toUpperCase(),
-      finalWitel
-    );
+    await db.execute({
+      sql: 'INSERT INTO sto_mapping (kode_sto, nama_wilayah, witel) VALUES (?, ?, ?)',
+      args: [kode_sto.toUpperCase(), nama_wilayah.toUpperCase(), finalWitel]
+    });
 
     res.status(201).json({ message: 'STO berhasil ditambahkan' });
   } catch (error) {
@@ -80,8 +67,8 @@ app.post('/api/stos', (req, res) => {
   }
 });
 
-// 3. PUT /api/stos/:kode_sto -> Edit STO (edit nama wilayah & witel)
-app.put('/api/stos/:kode_sto', (req, res) => {
+// 3. PUT /api/stos/:kode_sto -> Edit STO
+app.put('/api/stos/:kode_sto', async (req, res) => {
   const { kode_sto } = req.params;
   const { nama_wilayah, witel } = req.body;
 
@@ -92,11 +79,12 @@ app.put('/api/stos/:kode_sto', (req, res) => {
   const finalWitel = witel ? witel.toUpperCase() : 'LAINNYA';
 
   try {
-    const result = db.prepare(
-      'UPDATE sto_mapping SET nama_wilayah = ?, witel = ? WHERE kode_sto = ?'
-    ).run(nama_wilayah.toUpperCase(), finalWitel, kode_sto.toUpperCase());
+    const result = await db.execute({
+      sql: 'UPDATE sto_mapping SET nama_wilayah = ?, witel = ? WHERE kode_sto = ?',
+      args: [nama_wilayah.toUpperCase(), finalWitel, kode_sto.toUpperCase()]
+    });
 
-    if (result.changes === 0) {
+    if (result.rowsAffected === 0) {
       return res.status(404).json({ error: 'Kode STO tidak ditemukan' });
     }
 
@@ -108,15 +96,16 @@ app.put('/api/stos/:kode_sto', (req, res) => {
 });
 
 // 4. DELETE /api/stos/:kode_sto -> Hapus STO
-app.delete('/api/stos/:kode_sto', (req, res) => {
+app.delete('/api/stos/:kode_sto', async (req, res) => {
   const { kode_sto } = req.params;
 
   try {
-    const result = db.prepare(
-      'DELETE FROM sto_mapping WHERE kode_sto = ?'
-    ).run(kode_sto.toUpperCase());
+    const result = await db.execute({
+      sql: 'DELETE FROM sto_mapping WHERE kode_sto = ?',
+      args: [kode_sto.toUpperCase()]
+    });
 
-    if (result.changes === 0) {
+    if (result.rowsAffected === 0) {
       return res.status(404).json({ error: 'Kode STO tidak ditemukan' });
     }
 
@@ -127,7 +116,10 @@ app.delete('/api/stos/:kode_sto', (req, res) => {
   }
 });
 
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Backend Server berjalan di http://localhost:${PORT}`);
+  });
+}
 
-app.listen(PORT, () => {
-  console.log(`🚀 Backend Server berjalan di http://localhost:${PORT}`);
-});
+export default app;
